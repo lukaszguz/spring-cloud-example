@@ -1,4 +1,4 @@
-package pl.guz.m2;
+package pl.guz;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

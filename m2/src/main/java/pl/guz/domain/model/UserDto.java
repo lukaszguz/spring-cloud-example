@@ -1,4 +1,4 @@
-package pl.guz.m2.domain.model;
+package pl.guz.domain.model;
 
 import lombok.Builder;
 import lombok.Value;
