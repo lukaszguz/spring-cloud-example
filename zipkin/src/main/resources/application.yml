@@ -1,6 +1,6 @@
-server:
-  port: 9000
-
 spring:
   application:
     name: zipkin
+
+server:
+  port: 9411

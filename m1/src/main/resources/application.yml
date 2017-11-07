@@ -4,3 +4,9 @@ server:
 spring:
   application:
     name: m1
+  sleuth:
+    async:
+      configurer:
+        enabled: true
+    sampler:
+      percentage: 1.0
