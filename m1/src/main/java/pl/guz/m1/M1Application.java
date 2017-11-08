@@ -7,6 +7,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.client.TraceAsyncClientHttpRequestFactoryWrapper;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceAsyncRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,10 +37,17 @@ public class M1Application {
             return new RestTemplate();
         }
 
-        @LoadBalanced
         @Bean
-        AsyncRestTemplate asyncRestTemplate(Tracer tracer, ErrorParser errorParser) {
-            return new TraceAsyncRestTemplate(tracer, errorParser);
+        @LoadBalanced
+        AsyncRestTemplate traceAsyncRestTemplate(Tracer tracer, HttpSpanInjector httpSpanInjector, HttpTraceKeysInjector httpTraceKeysInjector,
+                                                 ErrorParser errorParser) {
+            TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactoryWrapper = new TraceAsyncClientHttpRequestFactoryWrapper(tracer,
+                                                                                                                                                httpSpanInjector,
+                                                                                                                                                new AsyncRestTemplate()
+                                                                                                                                                        .getAsyncRequestFactory(),
+                                                                                                                                                httpTraceKeysInjector);
+
+            return new TraceAsyncRestTemplate(traceAsyncClientHttpRequestFactoryWrapper, tracer, errorParser);
         }
 
     }
@@ -48,9 +58,9 @@ public class M1Application {
         private final RestTemplate restTemplate;
         private final AsyncRestTemplate asyncRestTemplate;
 
-        public SimpleController(RestTemplate restTemplate, AsyncRestTemplate asyncRestTemplate) {
+        public SimpleController(RestTemplate restTemplate, AsyncRestTemplate traceAsyncRestTemplate) {
             this.restTemplate = restTemplate;
-            this.asyncRestTemplate = asyncRestTemplate;
+            this.asyncRestTemplate = traceAsyncRestTemplate;
         }
 
         @GetMapping("/hello-sync")
