@@ -22,7 +22,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<spring-cloud.version>Dalston.SR3</spring-cloud.version>
+		<spring-cloud.version>Dalston.SR4</spring-cloud.version>
 		<rxjava-version>2.1.6</rxjava-version>
 		<groovy.version>2.4.5</groovy.version>
 		<cglib.version>3.2.4</cglib.version>

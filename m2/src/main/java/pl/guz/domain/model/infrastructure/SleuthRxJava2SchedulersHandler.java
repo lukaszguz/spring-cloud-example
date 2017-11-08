@@ -1,4 +1,4 @@
-package pl.guz.m1.domain.infrastructure;
+package pl.guz.domain.model.infrastructure;
 
 import io.reactivex.functions.Function;
 import io.reactivex.plugins.RxJavaPlugins;
