@@ -1,0 +1,3 @@
+# Auto Configuration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+pl.guz.m1.domain.infrastructure.RxJava2AutoConfiguration
