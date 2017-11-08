@@ -10,9 +10,3 @@ spring:
         enabled: true
     sampler:
       percentage: 1.0
-#    rxjava:
-#      schedulers:
-#        ignoredthreads:
-#          -HystrixMetricPoller
-#          -^RxComputation.*$
-#          -elo-*

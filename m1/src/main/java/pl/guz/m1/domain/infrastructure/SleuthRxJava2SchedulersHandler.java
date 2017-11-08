@@ -32,10 +32,10 @@ class SleuthRxJava2SchedulersHandler {
         this.traceKeys = traceKeys;
         this.threadsToSample = threadsToSample;
         try {
-            RxJavaPlugins.setScheduleHandler(runnable -> {
-                log.info("setScheduleHandler");
-                return new TraceAction(this.tracer, this.traceKeys, runnable, this.threadsToSample);
-            });
+            if (RxJavaPlugins.getScheduleHandler() instanceof TraceAction) {
+                return;
+            }
+            RxJavaPlugins.setScheduleHandler(runnable -> new TraceAction(this.tracer, this.traceKeys, runnable, this.threadsToSample));
         } catch (Exception e) {
             log.error("Failed to register Sleuth RxJava SchedulersHook", e);
         }
