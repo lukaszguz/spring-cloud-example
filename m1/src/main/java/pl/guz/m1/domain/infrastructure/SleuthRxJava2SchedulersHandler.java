@@ -1,8 +1,11 @@
 package pl.guz.m1.domain.infrastructure;
 
+import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Objects;
 
+import io.reactivex.SingleObserver;
+import io.reactivex.internal.operators.single.SingleObserveOn;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
@@ -28,7 +31,7 @@ class SleuthRxJava2SchedulersHandler {
 	private static final String RXJAVA_COMPONENT = "rxjava2";
 
 	SleuthRxJava2SchedulersHandler(Tracer tracer, TraceKeys traceKeys,
-			List<String> threadsToSample) {
+								   List<String> threadsToSample) {
 		try {
 			Function<? super Runnable, ? extends Runnable> delegate = RxJavaPlugins
 					.getScheduleHandler();
@@ -59,8 +62,8 @@ class SleuthRxJava2SchedulersHandler {
 		private final Function<? super Runnable, ? extends Runnable> delegate;
 
 		public ScheduleHandler(Tracer tracer, TraceKeys traceKeys,
-				List<String> threadsToSample,
-				Function<? super Runnable, ? extends Runnable> delegate) {
+							   List<String> threadsToSample,
+							   Function<? super Runnable, ? extends Runnable> delegate) {
 			this.tracer = tracer;
 			this.traceKeys = traceKeys;
 			this.threadsToSample = threadsToSample;
@@ -69,17 +72,28 @@ class SleuthRxJava2SchedulersHandler {
 
 		@Override
 		public Runnable apply(Runnable action) throws Exception {
-			if (action instanceof Disposable) {
+			if (isTraceActionDecoratedByRxWorker(action)) {
 				return action;
 			}
-			Runnable wrappedAction = Objects.nonNull(this.delegate)
-					? this.delegate.apply(action)
+			Runnable wrappedAction = this.delegate != null ? this.delegate.apply(action)
 					: action;
-			if (wrappedAction instanceof Disposable) {
-				return action;
-			}
 			return new SleuthRxJava2SchedulersHandler.TraceAction(this.tracer,
 					this.traceKeys, wrappedAction, this.threadsToSample);
+		}
+
+		private boolean isTraceActionDecoratedByRxWorker(Runnable action) {
+			try {
+				if (action instanceof Disposable) {
+					Field modifiersField = action.getClass()
+							.getDeclaredField("decoratedRun");
+					modifiersField.setAccessible(true);
+					return modifiersField.get(action) instanceof TraceAction;
+				}
+				return false;
+			}
+			catch (Exception e) {
+				return false;
+			}
 		}
 	}
 
@@ -92,7 +106,7 @@ class SleuthRxJava2SchedulersHandler {
 		private final List<String> threadsToIgnore;
 
 		public TraceAction(Tracer tracer, TraceKeys traceKeys, Runnable actual,
-				List<String> threadsToIgnore) {
+						   List<String> threadsToIgnore) {
 			this.tracer = tracer;
 			this.traceKeys = traceKeys;
 			this.threadsToIgnore = threadsToIgnore;
@@ -117,7 +131,7 @@ class SleuthRxJava2SchedulersHandler {
 			}
 			Span span = this.parent;
 			boolean created = false;
-			if (Objects.nonNull(span)) {
+			if (span != null) {
 				span = this.tracer.continueSpan(span);
 			}
 			else {
